@@ -1,21 +1,21 @@
-import React, { Component } from "react";
-import { Player } from "../../components";
+import React, { Component } from 'react';
+import { Player, Winner } from '../../components';
 
 const getInitialState = () => ({
   players: {
     1: {
       id: 1,
-      name: "P1",
-      life: 100
+      name: 'P1',
+      life: 100,
     },
     2: {
       id: 2,
-      name: "P2",
-      life: 100
-    }
+      name: 'P2',
+      life: 100,
+    },
   },
   playerIds: [1, 2],
-  finished: false
+  finished: false,
 });
 
 class Battle extends Component {
@@ -26,18 +26,18 @@ class Battle extends Component {
       const player = { ...state.players[playerId] };
       player.life -= 20;
 
-      let finished = false;
-      if (player.life <= 0) {
-        finished = true;
-      }
+      const players = {
+        ...state.players,
+        [playerId]: player,
+      };
+
+      // Filter the still alive players, notice it uses the updated players object
+      const playersAlive = state.playerIds.filter(id => players[id].life > 0);
 
       return {
         ...state,
-        finished,
-        players: {
-          ...state.players,
-          [playerId]: player
-        }
+        finished: playersAlive.length <= 1,
+        players,
       };
     });
   };
@@ -52,12 +52,7 @@ class Battle extends Component {
     if (finished) {
       const winnerId = playerIds.find(id => players[id].life > 0);
       const player = players[winnerId];
-      return (
-        <div>
-          The winner is: {player.name}{" "}
-          <button onClick={this.handleReset}>reset</button>
-        </div>
-      );
+      return <Winner player={player} onReset={this.handleReset} />;
     }
 
     const renderedPlayers = playerIds.map(playerId => {
@@ -71,7 +66,17 @@ class Battle extends Component {
       );
     });
 
-    return <div>{renderedPlayers}</div>;
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-around',
+        }}
+      >
+        {renderedPlayers}
+      </div>
+    );
   }
 }
 
