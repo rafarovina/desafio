@@ -1,83 +1,64 @@
-import React, { Component } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { Button } from 'react-bootstrap';
+
+import { resetBattle, attackPlayer } from '../../actions/battleActions';
 import { Player, Winner } from '../../components';
 
-const getInitialState = () => ({
-  players: {
-    1: {
-      id: 1,
-      name: 'P1',
-      life: 100,
-    },
-    2: {
-      id: 2,
-      name: 'P2',
-      life: 100,
-    },
-  },
-  playerIds: [1, 2],
-  finished: false,
-});
+const Battle = props => {
+  const {
+    players,
+    playerIds,
+    finished,
+    onAttackPlayerAction,
+    onResetBattleAction,
+  } = props;
 
-class Battle extends Component {
-  state = getInitialState();
-
-  handleAttack = playerId => {
-    this.setState(state => {
-      const player = { ...state.players[playerId] };
-      player.life -= 20;
-
-      const players = {
-        ...state.players,
-        [playerId]: player,
-      };
-
-      // Filter the still alive players, notice it uses the updated players object
-      const playersAlive = state.playerIds.filter(id => players[id].life > 0);
-
-      return {
-        ...state,
-        finished: playersAlive.length <= 1,
-        players,
-      };
-    });
-  };
-
-  handleReset = () => {
-    this.setState(getInitialState());
-  };
-
-  render() {
-    const { players, playerIds, finished } = this.state;
-
-    if (finished) {
-      const winnerId = playerIds.find(id => players[id].life > 0);
-      const player = players[winnerId];
-      return <Winner player={player} onReset={this.handleReset} />;
-    }
-
-    const renderedPlayers = playerIds.map(playerId => {
-      const player = players[playerId];
-      return (
-        <Player
-          key={player.id}
-          onAttack={() => this.handleAttack(playerId)}
-          {...player}
-        />
-      );
-    });
-
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-around',
-        }}
-      >
-        {renderedPlayers}
-      </div>
-    );
+  
+  if (finished) {
+    const winnerId = playerIds.find(id => players[id].life > 0);
+    const player = players[winnerId];
+    return <Winner player={player} onReset={onResetBattleAction} />;
   }
-}
 
-export default Battle;
+  const renderedPlayers = playerIds.map(playerId => {
+    const player = players[playerId];
+    return (
+      <Player
+        key={player.id}
+        onAttack={() => onAttackPlayerAction(playerId)}
+        {...player}
+      />
+    );
+  });
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'space-around',
+      }}
+    >
+      {renderedPlayers}
+      <div style={{ flexBasis: '100%', textAlign: 'center' }}>
+        <Button bsStyle="info" onClick={onResetBattleAction}>Reset battle</Button>
+      </div>
+    </div>
+  );
+};
+
+Battle.propTypes = {
+  players: PropTypes.object.isRequired,
+  playerIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onResetBattleAction: PropTypes.func.isRequired,
+  onAttackPlayerAction: PropTypes.func.isRequired,
+};
+
+Battle.defaultProps = {};
+
+export default connect(state => state, {
+  onResetBattleAction: resetBattle,
+  onAttackPlayerAction: attackPlayer,
+})(Battle);
